@@ -15,11 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using Avro.Specific;
 using Avro.Test.File;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
+using System.Runtime.Serialization;
 
 namespace Avro.Test.Specific
 {
@@ -74,7 +76,9 @@ namespace Avro.Test.Specific
         [TestCase("Foo", Schema.Type.Array, typeof(IList<Foo>))]
         [TestCase("IList<Foo>", Schema.Type.Array, typeof(IList<IList<Foo>>))]
         [TestCase("IList<IList<IList<Foo>>>", Schema.Type.Array, typeof(IList<IList<IList<IList<Foo>>>>))]
-        [TestCase("System.Collections.Generic.IList<System.Collections.Generic.IList<System.Collections.Generic.IList<Foo>>>", Schema.Type.Array, typeof(IList<IList<IList<IList<Foo>>>>))]
+        [TestCase(
+            "System.Collections.Generic.IList<System.Collections.Generic.IList<System.Collections.Generic.IList<Foo>>>",
+            Schema.Type.Array, typeof(IList<IList<IList<IList<Foo>>>>))]
         [TestCase("Foo", Schema.Type.Map, typeof(IDictionary<string, Foo>))]
         [TestCase("Nullable<Int32>", Schema.Type.Array, typeof(IList<Nullable<int>>))]
         [TestCase("System.Nullable<Int32>", Schema.Type.Array, typeof(IList<int?>))]
@@ -96,11 +100,17 @@ namespace Avro.Test.Specific
             TestName = "TestComplexGetTypes_NullableInName")]
         [TestCase(typeof(MyIListFoo), "MyIListFoo",
             TestName = "TestComplexGetTypes_IListInName")]
-        public void TestComplexGetTypes(Type expecteType, string name)
+        [TestCase(typeof(MyClassWithDataContractNamespace), "Something.Namespace.MyClassWithDataContractNamespace",
+            TestName = "TestGetType_DataContractAttributeWithNamespaceOnly")]
+        [TestCase(typeof(MyClassWithDataContractName), "SomethingName",
+            TestName = "TestGetType_DataContractAttributeWithNameOnly")]
+        [TestCase(typeof(MyClassWithDataContractNamespaceAndName), "Something.Namespace.SomethingName",
+            TestName = "TestGetType_DataContractAttributeWithNamespaceAndName")]
+        public void TestComplexGetTypes(Type expectedType, string name)
         {
             var objectCreator = new ObjectCreator();
 
-            Assert.AreEqual(expecteType, objectCreator.GetType(name, Schema.Type.Record));
+            Assert.AreEqual(expectedType, objectCreator.GetType(name, Schema.Type.Record));
         }
 
         private class MyNullableFoo
@@ -108,6 +118,21 @@ namespace Avro.Test.Specific
         }
 
         private class MyIListFoo
+        {
+        }
+
+        [DataContract(Namespace = "Something.Namespace")]
+        private class MyClassWithDataContractNamespace
+        {
+        }
+
+        [DataContract(Name = "SomethingName")]
+        private class MyClassWithDataContractName
+        {
+        }
+
+        [DataContract(Namespace = "Something.Namespace", Name = "SomethingName")]
+        private class MyClassWithDataContractNamespaceAndName
         {
         }
     }
